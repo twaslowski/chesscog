@@ -17,12 +17,14 @@ RUN mkdir -p /config
 ENV CONFIG_DIR /config
 COPY ./config/* /config/
 
-# Setup models mount
-RUN mkdir -p /chess/models
-ENV MODELS_DIR /chess/models
-COPY ./models/* /chess/models/
+COPY chesscog ./chesscog
+
+# Get models
+RUN mkdir -p /models
+ENV MODELS_DIR /models
+RUN python -m chesscog.piece_classifier.download_models
+RUN python -m chesscog.occupancy_classifier.download_models
 
 # Copy files
-COPY chesscog ./chesscog
 
 ENTRYPOINT ["python", "-m", "chesscog.recognition.recognition"]
