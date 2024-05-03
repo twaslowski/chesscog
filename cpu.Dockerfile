@@ -22,8 +22,8 @@ COPY chesscog ./chesscog
 # Get models
 RUN mkdir -p /models
 ENV MODELS_DIR /models
-RUN python -m chesscog.piece_classifier.download_models
-RUN python -m chesscog.occupancy_classifier.download_models
+RUN python -m chesscog.piece_classifier.download_model
+RUN python -m chesscog.occupancy_classifier.download_model
 
 # Copy files
 
