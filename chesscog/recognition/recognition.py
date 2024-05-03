@@ -19,6 +19,7 @@ This module simultaneously acts as a script to perform a single inference:
       --black     indicate that the image is from the black player's
                   perspective
 """
+import base64
 
 import numpy as np
 import chess
@@ -94,7 +95,8 @@ class ChessRecognizer:
         occupancy = occupancy.cpu().numpy()
         return occupancy
 
-    def _classify_pieces(self, img: np.ndarray, turn: chess.Color, corners: np.ndarray, occupancy: np.ndarray) -> np.ndarray:
+    def _classify_pieces(self, img: np.ndarray, turn: chess.Color, corners: np.ndarray,
+                         occupancy: np.ndarray) -> np.ndarray:
         occupied_squares = np.array(self._squares)[occupancy]
         warped = create_piece_dataset.warp_chessboard_image(
             img, corners)
@@ -173,10 +175,10 @@ class TimedChessRecognizer(ChessRecognizer):
             t5 = timer()
 
             times = {
-                "corner_detection": t2-t1,
-                "occupancy_classification": t3-t2,
-                "piece_classification": t4-t3,
-                "prepare_results": t5-t4
+                "corner_detection": t2 - t1,
+                "occupancy_classification": t3 - t2,
+                "piece_classification": t4 - t3,
+                "prepare_results": t5 - t4
             }
 
             return board, corners, times
@@ -194,15 +196,17 @@ def main(classifiers_folder: Path = URI("models://"), setup: callable = lambda: 
         description="Run the chess recognition pipeline on an input image")
     parser.add_argument("file", help="path to the input image", type=str)
     parser.add_argument(
-        "--white", help="indicate that the image is from the white player's perspective (default)", action="store_true", dest="color")
+        "--white", help="indicate that the image is from the white player's perspective (default)", action="store_true",
+        dest="color")
     parser.add_argument(
-        "--black", help="indicate that the image is from the black player's perspective", action="store_false", dest="color")
+        "--black", help="indicate that the image is from the black player's perspective", action="store_false",
+        dest="color")
     parser.set_defaults(color=True)
     args = parser.parse_args()
 
     setup()
 
-    img = cv2.imread(str(URI(args.file)))
+    img = readb64(args.file)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     recognizer = ChessRecognizer(classifiers_folder)
@@ -217,6 +221,12 @@ def main(classifiers_folder: Path = URI("models://"), setup: callable = lambda: 
         print()
         print("WARNING: The predicted chess position is not legal according to the rules of chess.")
         print("         You might want to try again with another picture.")
+
+
+def readb64(b64_image: str):
+    nparr = np.frombuffer(base64.b64decode(b64_image), np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    return img
 
 
 if __name__ == "__main__":
