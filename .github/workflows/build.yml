@@ -15,7 +15,6 @@ on:
 
 jobs:
   build_docker:
-    needs: create_infrastructure
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     steps:
